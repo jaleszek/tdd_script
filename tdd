@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# Source RVM as a function into local environment.
+[ -s "$HOME/.rvm/scripts/rvm" ] && . "$HOME/.rvm/scripts/rvm"
+
+PROJECT_DIRECTORY=$1
+
+if [ -d $PROJECT_DIRECTORY ] ; then
+  echo 'Next iteration, nice'
+else
+  echo 'created directory' $PROJECT_DIRECTORY
+  mkdir $PROJECT_DIRECTORY
+  git init
+fi
+
+cd $PROJECT_DIRECTORY
+
+if [ -f '.ruby-version' ]; then
+  echo '.ruby-version exists!'
+else
+  touch '.ruby-version'
+  echo "1.9.3" >> '.ruby-version'
+fi
+
+if [ -f '.ruby-gemset' ]; then
+  echo '.ruby-gemset exists!'
+else
+  touch '.ruby-gemset'
+  cd ..
+  cd $PROJECT_DIRECTORY
+  
+  rvm gemset create $1
+  echo $1 >> '.ruby-gemset'
+fi
+
+if [ -f 'task' ]; then
+  echo 'task exists!'
+else
+  touch task
+fi
+
+if [ -f 'Gemfile' ]; then
+  echo 'Gemfile exists'
+else
+  echo 'creating Gemfile'
+
+  bundle init
+  echo "
+    gem 'minitest'
+    gem 'debugger'
+    gem 'rspec'
+    gem 'guard', group: 'development'
+    gem 'guard-rspec', require: false
+    " >> Gemfile
+
+  bundle install
+fi
+
+rvm use 1.9.3
+
+FIRST_REPETITION_DIR=1
+if [ -d $FIRST_REPETITION_DIR ] ; then
+  LAST_REPETITION=`ls  | sort -n| sed -n '$p'`
+  NEW_REPETITION=$((LAST_REPETITION + 1))
+
+  CURRENT_REPETITION=$NEW_REPETITION
+  mkdir $CURRENT_REPETITION
+else
+  CURRENT_REPETITION=$FIRST_REPETITION_DIR
+  mkdir $CURRENT_REPETITION
+fi
+
+cd $CURRENT_REPETITION
+
+mkdir lib
+
+touch Guardfile
+
+echo "
+guard :rspec do
+  watch(%r{^spec/.+_spec\.rb$})
+  watch(%r{^lib/(.+)\.rb$})     { |m| 'spec/lib/' + 'm[1]' + '_spec.rb' }
+  watch('spec/spec_helper.rb')  { 'spec' }
+end" >> Guardfile
+
+rspec --init
+
+touch lib/tdd.rb
+
+cd spec
+
+echo "require File.expand_path(File.dirname(__FILE__) + '/../lib/tdd')" >> spec_helper.rb
+
+cd .. && guard start
