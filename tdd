@@ -10,10 +10,12 @@ if [ -d $PROJECT_DIRECTORY ] ; then
 else
   echo 'created directory' $PROJECT_DIRECTORY
   mkdir $PROJECT_DIRECTORY
-  git init
 fi
 
 cd $PROJECT_DIRECTORY
+
+# possible reinitialization here
+git init
 
 if [ -f '.ruby-version' ]; then
   echo '.ruby-version exists!'
@@ -88,7 +90,8 @@ rspec --init
 touch lib/tdd.rb
 
 cd spec
-
+touch tdd_spec.rb
+echo "require 'spec_helper'" >> tdd_spec.rb
 echo "require File.expand_path(File.dirname(__FILE__) + '/../lib/tdd')" >> spec_helper.rb
 
 cd .. && guard start
