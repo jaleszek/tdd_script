@@ -1,5 +1,7 @@
 #!/bin/bash
-
+# Improvement directions:
+# 1. tdd start - creates stack and new iteration
+# 2. tdd finish - commits changes, push to repository, possible analysis and comparison with previous solutions
 # Source RVM as a function into local environment.
 [ -s "$HOME/.rvm/scripts/rvm" ] && . "$HOME/.rvm/scripts/rvm"
 
